@@ -370,6 +370,8 @@ program coupler_main
   use land_model_mod,          only: atm_lnd_bnd_type_chksum
   use land_model_mod,          only: land_data_type_chksum
   use land_model_mod,          only: land_model_restart
+  use land_tile_mod,           only: land_tile_map
+
 
   use ice_model_mod,           only: ice_model_init, share_ice_domains, ice_model_end, ice_model_restart
   use ice_model_mod,           only: update_ice_model_fast, set_ice_surface_fields
@@ -839,7 +841,8 @@ program coupler_main
 !$OMP&      SHARED(Time_atmos, Atm, Land, Ice, Land_ice_atmos_boundary, Atmos_land_boundary, Atmos_ice_boundary) &
 !$OMP&      SHARED(Ocean_ice_boundary) &
 !$OMP&      SHARED(do_debug, do_chksum, do_atmos, do_land, do_ice, do_concurrent_radiation, omp_sec, imb_sec) &
-!$OMP&      SHARED(newClockc, newClockd, newClocke, newClockf, newClockg, newClockh, newClocki, newClockj, newClockl) 
+!$OMP&      SHARED(newClockc, newClockd, newClocke, newClockf, newClockg, newClockh, newClocki, newClockj, newClockl)& 
+!$OMP&      SHARED(land_tile_map)
 !$        call omp_set_num_threads(atmos_nthreads)
 !$        dsec=omp_get_wtime()
           if (do_concurrent_radiation) call mpp_clock_begin(newClocki)
@@ -888,7 +891,7 @@ program coupler_main
           call mpp_clock_begin(newClocke)
           if (do_land .AND. land%pe) then
             if (land_npes .NE. atmos_npes) call mpp_set_current_pelist(Land%pelist)
-            call update_land_model_fast( Atmos_land_boundary, Land )
+            call update_land_model_fast( Atmos_land_boundary, Land , land_tile_map)
           endif
           if (land_npes .NE. atmos_npes) call mpp_set_current_pelist(Atm%pelist)
           call mpp_clock_end(newClocke)
