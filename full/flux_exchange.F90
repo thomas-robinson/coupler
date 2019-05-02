@@ -544,6 +544,7 @@ module flux_exchange_mod
   use stock_constants_mod,        only: stocks_file, stocks_report, stocks_report_init
   use stock_constants_mod,        only: Atm_stock, Ocn_stock, Lnd_stock, Ice_stock
   use land_model_mod,             only: Lnd_stock_pe
+  use land_tile_mod, only : land_tile_map, land_tile_list_type
   use ocean_model_mod,            only: Ocean_stock_pe
   use atmos_model_mod,            only: Atm_stock_pe
   use atm_land_ice_flux_exchange_mod, only: atm_land_ice_flux_exchange_init, sfc_boundary_layer
@@ -815,7 +816,6 @@ contains
     type(land_data_type), optional            :: Lnd
     type(ice_data_type), optional             :: Ice
     type(ocean_state_type), optional, pointer :: Ocn_state
-
     real :: ref_value
     integer :: i
 
@@ -840,7 +840,7 @@ contains
 
        if(present(Lnd)) then
           ref_value = 0.0
-          call Lnd_stock_pe(Lnd, index=i, value=ref_value)
+          call Lnd_stock_pe(Lnd, land_tile_map,index=i, value=ref_value)
           Lnd_stock(i)%q_now = ref_value
        endif
 
@@ -893,7 +893,7 @@ contains
           Atm_stock(i)%q_start = Atm_stock(i)%q_start + ATM_PRECIP_NEW
        endif
 
-       call Lnd_stock_pe(   Lnd , index=i, value=Lnd_stock(i)%q_start)
+       call Lnd_stock_pe(   Lnd ,land_tile_map, index=i, value=Lnd_stock(i)%q_start)
        call Ice_stock_pe(   Ice , index=i, value=Ice_stock(i)%q_start)
        call Ocean_stock_pe( Ocn_state , index=i, value=Ocn_stock(i)%q_start)
     enddo

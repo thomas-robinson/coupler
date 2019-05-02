@@ -946,7 +946,8 @@ program coupler_main
 !$OMP&      PRIVATE(dsec) &
 !$OMP&      SHARED(Atm, Land, Ice, Land_ice_atmos_boundary, Atmos_ice_boundary, Ocean_ice_boundary, Atmos_land_boundary) &
 !$OMP&      SHARED(do_chksum, do_debug, omp_sec, num_atmos_calls, na, radiation_nthreads) &
-!$OMP&      SHARED(newClockj)
+!$OMP&      SHARED(newClockj)&
+!$OMP&      SHARED(land_tile_map)
 !$          call omp_set_num_threads(radiation_nthreads)
 !$          dsec=omp_get_wtime()
             call mpp_clock_begin(newClockj)
@@ -982,7 +983,7 @@ program coupler_main
       !   ------ end of atmospheric time step loop -----
       if (do_land .AND. Land%pe) then
         if (land_npes .NE. atmos_npes) call mpp_set_current_pelist(Land%pelist)
-        call update_land_model_slow(Atmos_land_boundary,Land)
+        call update_land_model_slow(Atmos_land_boundary,Land,land_tile_map)
       endif
       if (land_npes .NE. atmos_npes) call mpp_set_current_pelist(Atm%pelist)
       !-----------------------------------------------------------------------
