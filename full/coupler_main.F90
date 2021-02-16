@@ -1253,7 +1253,7 @@ contains
 !999   call mpp_close(unit)
 999   close(iunit)
 !      call mpp_open( unit, 'INPUT/coupler.res', action=MPP_RDONLY, form=MPP_NATIVE )
-      open( newunit=iunit, 'INPUT/coupler.res', action='READ', form='UNFORMATTED' )
+      open( newunit=iunit, file='INPUT/coupler.res', action='READ', form='UNFORMATTED' )
       read(iunit)calendar_type
       read(iunit)date
 !998   call mpp_close(unit)
