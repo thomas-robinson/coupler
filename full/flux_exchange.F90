@@ -506,7 +506,7 @@ module flux_exchange_mod
   use mpp_domains_mod, only: mpp_set_global_domain, mpp_set_data_domain, mpp_set_compute_domain
   use mpp_domains_mod, only: mpp_deallocate_domain, mpp_copy_domain, domain2d, mpp_compute_extent
 
-  use mpp_io_mod,      only: mpp_close, mpp_open, MPP_MULTI, MPP_SINGLE, MPP_OVERWR
+!  use mpp_io_mod,      only: mpp_close, mpp_open, MPP_MULTI, MPP_SINGLE, MPP_OVERWR
 
 !model_boundary_data_type contains all model fields at the boundary.
 !model1_model2_boundary_type contains fields that model2 gets
@@ -715,7 +715,7 @@ contains
 
     character(len=64),  parameter   :: grid_file = 'INPUT/grid_spec.nc'
     integer        :: ierr, io
-    integer        :: logunit, unit
+    integer        :: logunit
     character(len=256) :: errmsg
     integer              :: omp_get_num_threads, nthreads
 
@@ -748,17 +748,8 @@ contains
     logunit = stdlog()
     !----- read namelist -------
 
-#ifdef INTERNAL_FILE_NML
     read (input_nml_file, flux_exchange_nml, iostat=io)
     ierr = check_nml_error (io, 'flux_exchange_nml')
-#else
-    unit = open_namelist_file()
-    ierr=1; do while (ierr /= 0)
-    read  (unit, nml=flux_exchange_nml, iostat=io, end=10)
-    ierr = check_nml_error (io, 'flux_exchange_nml')
-    enddo
-10  call mpp_close(unit)
-#endif
 
     !----- write namelist to logfile -----
     call write_version_number (version, tag)
@@ -880,8 +871,9 @@ contains
     stocks_file=stdout()
     ! Divert output file for stocks if requested 
     if(mpp_pe()==mpp_root_pe() .and. divert_stocks_report) then
-       call mpp_open( stocks_file, 'stocks.out', action=MPP_OVERWR, threading=MPP_SINGLE, &
-            fileset=MPP_SINGLE, nohdrs=.TRUE. )       
+!       call mpp_open( stocks_file, 'stocks.out', action=MPP_OVERWR, threading=MPP_SINGLE, &
+!            fileset=MPP_SINGLE, nohdrs=.TRUE. )       
+       open (newunit = stocks_file, file='stocks.out', action="READWRITE")
     endif
 
     ! Initialize stock values
