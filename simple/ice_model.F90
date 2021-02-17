@@ -18,10 +18,6 @@ use          fms_mod, only: file_exist, open_namelist_file, open_restart_file, &
                             set_domain, nullify_domain
 use       fms_io_mod, only: get_restart_io_mode
 
-use       mpp_io_mod, only: mpp_open, mpp_close, mpp_get_info, mpp_read,   &
-                            MPP_RDONLY, MPP_NETCDF, MPP_MULTI, MPP_SINGLE, &
-                            fieldtype, mpp_get_atts, mpp_get_fields
-
 use  mpp_domains_mod, only: domain2d,  mpp_get_layout,  &
                             mpp_get_global_domain, mpp_get_compute_domain
 use mpp_mod, only: mpp_min, mpp_max
@@ -403,7 +399,6 @@ real :: lon0, lond, latd, amp, t_control, dellon, dom_wid, siggy, tempi
  integer :: isg, ieg, jsg, jeg
  integer :: unit, ierr, io, i, j
  integer :: ndim, nvar, natt, ntime, nlon, nlat, mlon, mlat, layout(2)
- type(fieldtype), allocatable :: Fields(:)
  logical :: need_ic
 
  if (module_is_initialized) then
@@ -468,27 +463,11 @@ real :: lon0, lond, latd, amp, t_control, dellon, dom_wid, siggy, tempi
 !----------------------------------------------------------
 !--- open the grid_spec file ---
 
-! call mpp_open ( unit, 'INPUT/grid_spec.nc', MPP_RDONLY, MPP_NETCDF, &
-!                 threading=MPP_MULTI, fileset = MPP_SINGLE )
-! call mpp_get_info (unit, ndim, nvar, natt, ntime)
-! allocate (Fields(nvar))
-! call mpp_get_fields (unit, Fields)
-
-! call get_grid_size ( Fields, nlon, nlat )
   nlon = size(glon_bnd,1)-1
   nlat = size(glon_bnd,2)-1
 
 !----------------------------------------------------------
 !--- set up domain type ---
-
-! if (present(Atmos_domain)) then
-!     call mpp_get_layout (Atmos_domain, layout)
-! else
-!     call mpp_define_layout  ( (/1,nlon,1,nlat/), mpp_npes(), layout )
-! endif
-
-! call mpp_define_domains ( (/1,nlon,1,nlat/), layout, Ice%Domain, &
-!                           name='ice grid')
 
   Ice%Domain => Atmos_domain
 
@@ -1066,61 +1045,7 @@ print *, 'pe,count(ice,all,ocean)=',mpp_pe(),count(Ice%ice_mask),count(Ice%mask)
 !######## netcdf interface routines #########
 !######################################################################
 
- subroutine get_grid_size ( Fields, nlon, nlat )
- type(fieldtype), intent(in)  :: Fields(:)
- integer,         intent(out) :: nlon, nlat
- integer :: i, j, dimsiz(4)
- character(len=128) :: name
-
-  nlon = 0; nlat = 0
-  do i = 1, size(Fields(:))
-     do j=1,128; name(j:j)=' '; enddo
-     call mpp_get_atts (Fields(i), name=name, siz=dimsiz)
-       select case (trim(name))
-          case ('geolon_t')
-             nlon= dimsiz(1); nlat = dimsiz(2)
-       end select
-  enddo
-
- end subroutine get_grid_size
-
-!----------------------------------------------------------------------
-
- subroutine read_grid_data ( unit, Fields, glonb, glatb, glon, glat, gmask )
- integer, intent(in) :: unit
- type(fieldtype), intent(in)  :: Fields(:)
- real,    intent(out) :: glonb(:), glatb(:)
- real,    intent(out) :: glon(:,:), glat(:,:)
- logical, intent(out) :: gmask(:,:)
- 
- integer :: i, m, n
- character(len=128) :: name
- real, dimension(size(glon,1)+1,size(glon,2)+1) :: data2d
-
-      m = size(glon,1);  n= size(glon,2)
-
-      do i = 1, size(Fields(:))
-         call mpp_get_atts(Fields(i), name=name)
-         select case (trim(name))
-            case ('geolon_t')
-               call mpp_read(unit,Fields(i),glon)
-               glon = glon*pi/180.
-            case ('geolat_t')
-               call mpp_read(unit,Fields(i),glat)
-               glat = glat*pi/180.
-            case ('geolon_vert_t')
-               call mpp_read(unit,Fields(i),data2d)
-               glonb = data2d(:,1)*pi/180.
-            case('geolat_vert_t')
-               call mpp_read(unit,Fields(i),data2d)
-               glatb = data2d(1,:)*pi/180.
-            case('wet')
-               call mpp_read(unit,Fields(i),data2d(1:m,1:n))
-               gmask = data2d(1:m,1:n) .gt. 0.50
-         end select
-      enddo
-
- end subroutine read_grid_data
+!! Unused, deleted
 
 !######################################################################
 
