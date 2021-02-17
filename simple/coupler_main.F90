@@ -66,8 +66,8 @@ use mpp_mod,            only: mpp_chksum, mpp_set_current_pelist
 
 use mpp_domains_mod,    only: mpp_get_global_domain, mpp_global_field, CORNER, mpp_set_domain_symmetry
 
-use mpp_io_mod,         only: mpp_open, mpp_close, &
-                              MPP_NATIVE, MPP_RDONLY, MPP_DELETE
+!use mpp_io_mod,         only: mpp_open, mpp_close, &
+!                              MPP_NATIVE, MPP_RDONLY, MPP_DELETE
 
 use time_manager_mod,   only: time_type, set_calendar_type, set_time,  &
                               set_date, days_in_month, month_name,     &
@@ -257,7 +257,7 @@ contains
 !-----------------------------------------------------------------------
 !   initialize all defined exchange grids and all boundary maps
 !-----------------------------------------------------------------------
-    integer :: total_days, total_seconds, unit, ierr, io
+    integer :: total_days, total_seconds, iunit, ierr, io
     integer :: n, gnlon, gnlat
     integer :: date(6), flags
     integer :: dt_size
@@ -299,17 +299,21 @@ contains
 !----- read restart file -----
 
     if (file_exist('INPUT/coupler.res')) then
-       call mpp_open( unit, 'INPUT/coupler.res', action=MPP_RDONLY )
+!       call mpp_open( unit, 'INPUT/coupler.res', action=MPP_RDONLY )
+       open (newunit=iunit, file='INPUT/coupler.res', action='READ')
        read (unit,*,err=999) calendar_type
        read (unit,*) date_init
        read (unit,*) date
        goto 998 !back to fortran-4
      ! read old-style coupler.res
-   999 call mpp_close (unit)
-       call mpp_open (unit, 'INPUT/coupler.res', action=MPP_RDONLY, form=MPP_NATIVE)
+!   999 call mpp_close (unit)
+   999 close (iunit)
+!       call mpp_open (unit, 'INPUT/coupler.res', action=MPP_RDONLY, form=MPP_NATIVE)
+       open (newunit=iunit, file='INPUT/coupler.res', action='READ', form='UNFORMATTED')
        read (unit) calendar_type
        read (unit) date
-   998 call mpp_close(unit)
+!   998 call mpp_close(unit)
+   998 close (iunit)
     else
        force_date_from_namelist = .true.
     endif       
@@ -409,8 +413,8 @@ contains
 !-----------------------------------------------------------------------
 !----- write time stamps (for start time and end time) ------
    
-    call mpp_open( unit, 'time_stamp.out', nohdrs=.TRUE. )
-
+!    call mpp_open( unit, 'time_stamp.out', nohdrs=.TRUE. )
+    open( newunit=iunit, file='time_stamp.out')
     month = month_name(date(2))
     if ( mpp_pe() == mpp_root_pe() ) write (unit,20) date, month(1:3)
 
@@ -419,7 +423,8 @@ contains
     month = month_name(date(2))
     if ( mpp_pe() == mpp_root_pe() ) write (unit,20) date, month(1:3)
 
-    call mpp_close (unit)
+!    call mpp_close (unit)
+    close (iunit)
 
  20 format (6i4,2x,a3)
 
@@ -502,8 +507,10 @@ contains
 !-----------------------------------------------------------------------
 !---- open and close dummy file in restart dir to check if dir exists --
 
-    call mpp_open( unit, 'RESTART/file' )
-    call mpp_close(unit, MPP_DELETE)
+!    call mpp_open( unit, 'RESTART/file' )
+!    call mpp_close(unit, MPP_DELETE)
+    open( newunit=unit, file='RESTART/file' )
+    close(unit=iunit, sta="DELETE")
 
 !-----------------------------------------------------------------------
 
@@ -513,7 +520,7 @@ contains
 
   subroutine coupler_end
 
-    integer :: unit, date(6)
+    integer :: iunit, date(6)
 !-----------------------------------------------------------------------
 
 !----- compute current date ------
@@ -528,7 +535,8 @@ contains
 
 !----- write restart file ------
 
-    call mpp_open( unit, 'RESTART/coupler.res', nohdrs=.TRUE. )
+!    call mpp_open( unit, 'RESTART/coupler.res', nohdrs=.TRUE. )
+    open( newunit=iunit, file='RESTART/coupler.res')
     if (mpp_pe() == mpp_root_pe())then
        write( unit, '(i6,8x,a)' )calendar_type, &
             '(Calendar: no_calendar=0, thirty_day_months=1, julian=2, gregorian=3, noleap=4)'
@@ -548,7 +556,8 @@ contains
     call diag_manager_end (Time_atmos)
 
     call  fms_io_exit
-    call mpp_close(unit)
+!    call mpp_close(unit)
+    close(iunit)
 
 ! call flux_exchange_end (Atm)
 
