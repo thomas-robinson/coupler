@@ -56,8 +56,6 @@ use fms_mod,            only: open_namelist_file, file_exist, check_nml_error,  
                               error_mesg, fms_init, fms_end, close_file,        &
                               write_version_number, uppercase, stdout
 
-use fms_io_mod,         only: fms_io_exit
-
 use mpp_mod,            only: mpp_init, mpp_pe, mpp_root_pe, mpp_npes, mpp_get_current_pelist, &
                               stdlog, mpp_error, NOTE, FATAL, WARNING
 use mpp_mod,            only: mpp_clock_id, mpp_clock_begin, mpp_clock_end
@@ -274,7 +272,7 @@ contains
 !----- for backwards compatibilty read from file coupler.nml -----
 
     if (file_exist('input.nml')) then
-      unit = open_namelist_file ()
+      iunit = open_namelist_file ()
     else
       call error_mesg ('program coupler',  &
                        'namelist file input.nml does not exist', FATAL)
@@ -282,10 +280,10 @@ contains
    
     ierr=1
     do while (ierr /= 0)
-      read  (unit, nml=coupler_nml, iostat=io, end=10)
+      read  (iunit, nml=coupler_nml, iostat=io, end=10)
       ierr = check_nml_error (io, 'coupler_nml')
     enddo
-10  call close_file (unit)
+10  call close_file (iunit)
 
 !----- write namelist to logfile -----
 
@@ -509,7 +507,7 @@ contains
 
 !    call mpp_open( unit, 'RESTART/file' )
 !    call mpp_close(unit, MPP_DELETE)
-    open( newunit=unit, file='RESTART/file' )
+    open( newunit=iunit, file='RESTART/file' )
     close(unit=iunit, sta="DELETE")
 
 !-----------------------------------------------------------------------
@@ -555,7 +553,6 @@ contains
 
     call diag_manager_end (Time_atmos)
 
-    call  fms_io_exit
 !    call mpp_close(unit)
     close(iunit)
 
